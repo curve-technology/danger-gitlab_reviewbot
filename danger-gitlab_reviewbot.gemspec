@@ -7,10 +7,10 @@ Gem::Specification.new do |spec|
   spec.name          = 'danger-gitlab_reviewbot'
   spec.version       = GitlabReviewbot::VERSION
   spec.authors       = ['Fabio Gallonetto']
-  spec.email         = ['fabio.gallonetto@imaginecurve.com']
-  spec.description   = %q{A short description of danger-gitlab_reviewbot.}
-  spec.summary       = %q{A longer description of danger-gitlab_reviewbot.}
-  spec.homepage      = 'https://github.com/Fabio Gallonetto/danger-gitlab_reviewbot'
+  spec.email         = ['fabio.gallonetto@curve.com']
+  spec.description   = %q{A review raffle bot for Gitlab }
+  spec.summary       = %q{A review raffle bot for Gitlab.}
+  spec.homepage      = 'https://github.com/curve-technology/danger-gitlab_reviewbot'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($/)
@@ -19,9 +19,10 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_runtime_dependency 'danger-plugin-api', '~> 1.0'
+  spec.add_runtime_dependency 'danger-gitlab'
 
   # General ruby development
-  spec.add_development_dependency 'bundler', '~> 1.3'
+  spec.add_development_dependency 'bundler', '~> 2.1'
   spec.add_development_dependency 'rake', '~> 10.0'
 
   # Testing support

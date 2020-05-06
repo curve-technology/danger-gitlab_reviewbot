@@ -1,3 +1,6 @@
+require 'gitlab_reviewbot/strategies'
+
+
 module Danger
   # This is your plugin class. Any attributes or methods you expose here will
   # be available from within your Dangerfile.
@@ -18,16 +21,71 @@ module Danger
   #
   class DangerGitlabReviewbot < Plugin
 
-    # An attribute that you can read/write from your Dangerfile
+    # Define the group to take the reviewers from. 
+    # NOTE: This is the group full path as in 'tech/iOS' instead of just the group name
     #
-    # @return   [Array<String>]
-    attr_accessor :my_attribute
+    # @return   String
+    attr_accessor :gitlab_group
 
-    # A method that you can call from your Dangerfile
-    # @return   [Array<String>]
+    # Define the amount of reviewers to add to the merge requests.
+    # Default is 1.
+    # NOTE: The plugin won't remove existing assigned reviewers
     #
-    def warn_on_mondays
-      warn 'Trying to merge code on a Monday' if Date.today.wday == 1
+    # @return   Int
+    attr_accessor :assignees_amount
+    def assignees_amount
+      @assignees_amount || 1
+    end
+
+    # Define the strategy for chosing reviewers.
+    # Valid values are:
+    # * Danger::AssignStrategies::RandomStrategy - assigns N reviewers at random from the group
+    #   (excluding the author).
+    # * Danger::AssignStrategies::LeastBusyStrategy - assign the N users with the least amount of open MRs
+    #   to review
+    #
+    attr_accessor :strategy
+    def strategy
+      @strategy || Danger::AssignStrategies::RandomStrategy
+    end
+
+    # Add verbosity to the logs
+    # @return Bool
+    attr_accessor :verbose
+
+    # Call this method from the Dangerfile to assign reviewers to your merge requests
+    # @return   The usernames list of assigned reviewes [Array<String>]
+    #
+    def assign!
+      project_id = ENV['CI_PROJECT_ID']
+      mr_iid = ENV['CI_MERGE_REQUEST_IID']
+      if mr_iid.nil?
+        raise "Env variable CI_MERGE_REQUEST_IID doesn't point to a valid merge request iid"
+      end
+
+      if project_id.nil?
+        raise "Env variable CI_PROJECT_ID doesn't point to a valid project id"
+      end
+
+      current_assignees = (ENV['CI_MERGE_REQUEST_ASSIGNEES'] || '').split(',')
+      required_assignees_count = [assignees_amount - current_assignees.length, 0].max
+
+      puts "Project ID: #{project_id}" if @verbose
+      puts "MR IID: #{mr_iid}" if @verbose
+      puts "Currently assigned: #{current_assignees}" if @verbose
+      puts "Required: #{required_assignees_count}" if @verbose
+      if required_assignees_count == 0
+        puts "Nothing to do" if @verbose
+        return
+      end
+
+      strategy_class = strategy.new(client: gitlab.api, project: project_id, mr: mr_iid, group: gitlab_group)
+
+      assignees = strategy_class.assign! required_assignees_count
+
+      puts "Assigning: #{assignees}" if @verbose
+      return assignees
     end
   end
 end
+

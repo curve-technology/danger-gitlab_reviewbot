@@ -50,11 +50,14 @@ end
 # running a PR on TravisCI
 def testing_env
   {
-    "HAS_JOSH_K_SEAL_OF_APPROVAL" => "true",
-    "TRAVIS_PULL_REQUEST" => "800",
-    "TRAVIS_REPO_SLUG" => "artsy/eigen",
-    "TRAVIS_COMMIT_RANGE" => "759adcbd0d8f...13c4dc8bb61d",
-    "DANGER_GITHUB_API_TOKEN" => "123sbdq54erfsd3422gdfio"
+    'CI_MERGE_REQUEST_IID' => '549',
+    'CI_MERGE_REQUEST_PROJECT_PATH' => '...',
+    'CI_MERGE_REQUEST_PROJECT_URL' => '...',
+    'DANGER_GITLAB_HOST' => 'github.com', # This needs to be the same as where the repo is stored due to Danger internals :facepalm:
+    'CI_API_V4_URL' => "https://gitlab.com/api/v4",
+    'CI_PROJECT_ID' => '346',
+    "GITLAB_CI" => true,
+    "DANGER_GITLAB_API_TOKEN" => "token-token-token"
   }
 end
 

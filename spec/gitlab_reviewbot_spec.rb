@@ -11,36 +11,65 @@ module Danger
     #
     describe "with Dangerfile" do
       before do
+        testing_env.each { |k,v| ENV[k] = "#{v}" }
+
         @dangerfile = testing_dangerfile
-        @my_plugin = @dangerfile.gitlab_reviewbot
-
-        # mock the PR data
-        # you can then use this, eg. github.pr_author, later in the spec
-        json = File.read(File.dirname(__FILE__) + '/support/fixtures/github_pr.json') # example json: `curl https://api.github.com/repos/danger/danger-plugin-template/pulls/18 > github_pr.json`
-        allow(@my_plugin.github).to receive(:pr_json).and_return(json)
+        @plugin = @dangerfile.gitlab_reviewbot
+        @plugin.strategy = Danger::AssignStrategies::RandomStrategy
+        @strategy_mock = instance_double(Danger::AssignStrategies::Strategy)
+        allow(Danger::AssignStrategies::RandomStrategy).to receive(:new).and_return(@strategy_mock)
       end
 
-      # Some examples for writing tests
-      # You should replace these with your own.
+      it "Assign one reviewer" do
+        @plugin.gitlab_group = 'tech/ios'
 
-      it "Warns on a monday" do
-        monday_date = Date.parse("2016-07-11")
-        allow(Date).to receive(:today).and_return monday_date
+        expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Sam'])
 
-        @my_plugin.warn_on_mondays
+        @plugin.assign!
+      end
+      it "Assign one reviewer" do
+        @plugin.gitlab_group = 'tech/ios'
 
-        expect(@dangerfile.status_report[:warnings]).to eq(["Trying to merge code on a Monday"])
+        expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Sam'])
+
+        @plugin.assign!
       end
 
-      it "Does nothing on a tuesday" do
-        monday_date = Date.parse("2016-07-12")
-        allow(Date).to receive(:today).and_return monday_date
+      it "Assign multiple reviewers" do
+        @plugin.gitlab_group = 'tech/ios'
+        @plugin.assignees_amount = 2
 
-        @my_plugin.warn_on_mondays
+        expect(@strategy_mock).to receive(:assign!).with(2).and_return(['Sam, Nic'])
 
-        expect(@dangerfile.status_report[:warnings]).to eq([])
+        @plugin.assign!
       end
 
+      it "Doesn't assign if already asssigned" do
+        ENV['CI_MERGE_REQUEST_ASSIGNEES'] = 'Sam'
+        @plugin.gitlab_group = 'tech/ios'
+
+        expect(@strategy_mock).not_to receive(:assign!)
+
+        @plugin.assign!
+      end
+
+      it "Only assigns delta" do
+        ENV['CI_MERGE_REQUEST_ASSIGNEES'] = 'Sam,Nic'
+        @plugin.gitlab_group = 'tech/ios'
+        @plugin.assignees_amount = 3
+
+        expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Rob'])
+
+        @plugin.assign!
+      end
+
+      ['CI_PROJECT_ID', 'CI_MERGE_REQUEST_IID'].each do |var|
+        it "Fails when required #{var} variables are not available" do
+          ENV[var] = nil
+          expect{@plugin.assign!}.to raise_error(RuntimeError)
+        end
+      end
     end
   end
 end
+
