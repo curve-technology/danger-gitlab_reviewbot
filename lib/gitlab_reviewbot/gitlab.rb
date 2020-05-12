@@ -11,6 +11,10 @@ module Gitlab
       @username = username
       @review_count = review_count
     end
+
+    def ==(other)
+      id == other.id
+    end
   end
 
   class Client < API
@@ -40,8 +44,20 @@ module Gitlab
 
     def users_with_pending_mr_review(project_id)
       outstanding_mrs = fetch_mrs_requiring_review(project_id)
-      outstanding_mrs.reduce([]) { |acc, mr| acc + mr.assignees}
-                     .map { |a| User.new(a['id'], a['username']) }
+      all_assignees = outstanding_mrs.reduce([]) { |acc, mr| acc + mr.assignees }
+      assignees_id_map = all_assignees.reduce({}) { |acc, a|
+        aid = a['id']
+        ausername = a['username']
+        assignee = acc[aid] || User.new(aid, ausername)
+        assignee.review_count += 1
+        acc[aid] = assignee
+        acc
+      }
+      assignees_id_map.values
+    end
+
+    def fetch_mr_reviewers(project_id, mr_iid)
+      merge_request(project_id, mr_iid).assignees.map { |u| User.new(u['id'], u['username']) }
     end
 
     private

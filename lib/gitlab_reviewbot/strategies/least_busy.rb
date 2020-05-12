@@ -4,19 +4,16 @@ module Danger
   module AssignStrategies
     class LeastBusyStrategy < Strategy
       def assignees(amount)
-        review_counter = client.fetch_users_for_group(group_name).reduce({}) do |counter, user|
-          counter[user.id] = user
-          counter
-        end
+        users_in_group = fetch_users_in_group()
+        author = fetch_author()
+        invalid_assignees = [ fetch_author() ] + fetch_assigned_reviewers()
 
-        users = client.users_with_pending_mr_review(project_id) do |counter, user|
-          next if counter[user.id].nil?
-          counter[user.id].review_count += 1
-          counter
-        end
-        users.filter { |u| u.id != author.id }
-             .sort_by(&:review_count)
-             .last(amount)
+        users_with_reviews_pending = client.users_with_pending_mr_review(project_id)
+        users_without_reviews_pending = users_in_group.filter { |u| ! users_with_reviews_pending.include? u }
+
+        (users_with_reviews_pending + users_without_reviews_pending).filter { |u| u.id != author.id }
+                                                                    .sort_by(&:review_count)
+                                                                    .first(amount)
       end
     end
   end

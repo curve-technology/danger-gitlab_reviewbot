@@ -14,21 +14,30 @@ module Danger
       end
 
       def assign!(amount)
-        to_be_assigned = assignees(amount)
-        response = client.assign_mr_to_users(project_id, mr_iid, to_be_assigned)
-        return to_be_assigned.map(&:username)
+        currently_assigned = fetch_assigned_reviewers()
+        return [] if (amount - currently_assigned.length) == 0
+
+        to_be_assigned = assignees(amount - currently_assigned.length)
+        all_assignees = currently_assigned + to_be_assigned
+
+        response = client.assign_mr_to_users(project_id, mr_iid, all_assignees)
+        all_assignees.map(&:username)
       end
 
       def assignees(amount)
         raise "To be implemented in the subclasses"
       end
 
-      def author
+      def fetch_author
         client.fetch_author_for_mr(@project_id, @mr_iid)
       end
 
-      def users_in_group
-        client.fetch_users_for_group(group_name)
+      def fetch_assigned_reviewers
+        client.fetch_mr_reviewers(@project_id, @mr_iid)
+      end
+
+      def fetch_users_in_group
+        client.fetch_users_for_group(@group_name)
       end
     end
   end

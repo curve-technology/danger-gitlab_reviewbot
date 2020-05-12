@@ -81,7 +81,7 @@ module Danger
 
       strategy_class = strategy.new(client: gitlab.api, project: project_id, mr: mr_iid, group: gitlab_group)
 
-      assignees = strategy_class.assign! required_assignees_count
+      assignees = strategy_class.assign! assignees_amount
 
       puts "Assigning: #{assignees}" if @verbose
       return assignees
