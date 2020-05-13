@@ -49,10 +49,6 @@ module Danger
       @strategy || Danger::AssignStrategies::RandomStrategy
     end
 
-    # Add verbosity to the logs
-    # @return Bool
-    attr_accessor :verbose
-
     # Call this method from the Dangerfile to assign reviewers to your merge requests
     # @return   The usernames list of assigned reviewes [Array<String>]
     #
@@ -71,9 +67,9 @@ module Danger
       already_assigned_count = current_assignees.length
       required_assignees_count = [assignees_amount - already_assigned_count, 0].max
 
-      puts "Project ID: #{project_id}" if @verbose
-      puts "MR IID: #{mr_iid}" if @verbose
-      puts "Currently assigned: #{current_assignees}" if @verbose
+      puts "Project ID: #{project_id}" if verbose
+      puts "MR IID: #{mr_iid}" if verbose
+      puts "Currently assigned: #{current_assignees}" if verbose
  #    puts "Required: #{required_assignees_count}" if @verbose
 
       # if required_assignees_count == 0
@@ -85,7 +81,7 @@ module Danger
 
       assignees = strategy_class.assign! assignees_amount
 
-      puts "Assigning: #{assignees}" if @verbose
+      puts "Assigning: #{assignees}" if verbose
       return assignees
     end
   end
