@@ -10,9 +10,11 @@ module Danger
       @tom = Gitlab::User.new(2, 'Tom')
       @nic = Gitlab::User.new(3, 'Nic')
       @luke = Gitlab::User.new(4, 'Luke')
+      @lei = Gitlab::User.new(5, 'Lei')
+
 
       @mock_client = double(Gitlab::Client)
-      @author = @nic
+      @author = @lei
       @members = [@author, @tom, @sam]
       allow(@mock_client).to receive(:fetch_author_for_mr).and_return(@author)
       allow(@mock_client).to receive(:fetch_users_for_group).with(2200).and_return(@members)
@@ -52,6 +54,23 @@ module Danger
       end
 
       @strategy.assign!(2)
+    end
+
+    it "honours excluded users" do
+       allow(@mock_client).to receive(:fetch_mr_reviewers).with(10, 110).and_return([])
+       allow(@mock_client).to receive(:find_user_with_username).with('Luke').and_return(@luke)
+       allow(@mock_client).to receive(:find_user_with_username).with('Nic').and_return(@nic)
+       allow(@mock_client).to receive(:fetch_users_for_group).with(2200).and_return(@members + [@nic, @luke])
+       @strategy.excluded_users = ['Nic', 'Luke']
+
+       expect(@mock_client).to receive(:assign_mr_to_users) do |project, mr, users|
+         expect(project).to be == 10
+         expect(mr).to be == 110
+         expect(users).to contain_exactly(@tom, @sam)
+      end
+
+      @strategy.assign!(2)
+
     end
 
 

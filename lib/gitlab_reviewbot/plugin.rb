@@ -32,7 +32,7 @@ module Danger
     # NOTE: The plugin won't remove existing assigned reviewers
     #
     # @return   Int
-    attr_accessor :assignees_amount
+    attr_writer :assignees_amount
     def assignees_amount
       @assignees_amount || 1
     end
@@ -44,7 +44,7 @@ module Danger
     # * Danger::AssignStrategies::LeastBusyStrategy - assign the N users with the least amount of open MRs
     #   to review
     #
-    attr_accessor :strategy
+    attr_writer :strategy
     def strategy
       @strategy || Danger::AssignStrategies::RandomStrategy
     end

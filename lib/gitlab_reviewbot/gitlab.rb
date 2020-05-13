@@ -42,6 +42,10 @@ module Gitlab
       merge_requests(project_id, :state => 'opened', :per_page => '100').select { |mr| mr.merge_status != 'can_be_merged' }
     end
 
+    def find_user_with_username(username)
+      users({:username => username}).map { |u| User.new(u.id, u.username) }
+    end
+
     def users_with_pending_mr_review(project_id)
       outstanding_mrs = fetch_mrs_requiring_review(project_id)
       all_assignees = outstanding_mrs.reduce([]) { |acc, mr| acc + mr.assignees }
