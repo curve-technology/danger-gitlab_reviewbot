@@ -67,17 +67,19 @@ module Danger
         raise "Env variable CI_PROJECT_ID doesn't point to a valid project id"
       end
 
-      current_assignees = (ENV['CI_MERGE_REQUEST_ASSIGNEES'] || '').split(',')
-      required_assignees_count = [assignees_amount - current_assignees.length, 0].max
+      current_assignees = (ENV['CI_MERGE_REQUEST_ASSIGNEES'] || '').split(',') #buggy?
+      already_assigned_count = current_assignees.length
+      required_assignees_count = [assignees_amount - already_assigned_count, 0].max
 
       puts "Project ID: #{project_id}" if @verbose
       puts "MR IID: #{mr_iid}" if @verbose
       puts "Currently assigned: #{current_assignees}" if @verbose
-      puts "Required: #{required_assignees_count}" if @verbose
-      if required_assignees_count == 0
-        puts "Nothing to do" if @verbose
-        return
-      end
+ #    puts "Required: #{required_assignees_count}" if @verbose
+
+      # if required_assignees_count == 0
+      #   puts "Nothing to do" if @verbose
+      #   return
+      # end
 
       strategy_class = strategy.new(client: gitlab.api, project: project_id, mr: mr_iid, group: gitlab_group)
 
