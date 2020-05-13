@@ -17,9 +17,10 @@ module Danger
       @author = @lei
       @members = [@author, @tom, @sam]
       allow(@mock_client).to receive(:fetch_author_for_mr).and_return(@author)
-      allow(@mock_client).to receive(:fetch_users_for_group).with(2200).and_return(@members)
+      allow(@mock_client).to receive(:fetch_users_for_group).with("tech/ios").and_return(@members)
 
-      @strategy = AssignStrategies::RandomStrategy.new(client: @mock_client, project: 10, mr: 110, group: 2200)
+      @strategy = AssignStrategies::RandomStrategy.new(client: @mock_client, project: 10, mr: 110)
+      @strategy.group_name = "tech/ios"
     end
 
     it "assign the right amount of reviewers" do
@@ -55,24 +56,6 @@ module Danger
 
       @strategy.assign!(2)
     end
-
-    it "honours excluded users" do
-       allow(@mock_client).to receive(:fetch_mr_reviewers).with(10, 110).and_return([])
-       allow(@mock_client).to receive(:find_user_with_username).with('Luke').and_return(@luke)
-       allow(@mock_client).to receive(:find_user_with_username).with('Nic').and_return(@nic)
-       allow(@mock_client).to receive(:fetch_users_for_group).with(2200).and_return(@members + [@nic, @luke])
-       @strategy.excluded_users = ['Nic', 'Luke']
-
-       expect(@mock_client).to receive(:assign_mr_to_users) do |project, mr, users|
-         expect(project).to be == 10
-         expect(mr).to be == 110
-         expect(users).to contain_exactly(@tom, @sam)
-      end
-
-      @strategy.assign!(2)
-
-    end
-
 
   end
 end

@@ -33,8 +33,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "yard"
 
   # Makes testing easy via `bundle exec guard`
-  spec.add_development_dependency 'guard', '~> 2.14'
-  spec.add_development_dependency 'guard-rspec', '~> 4.7'
+  spec.add_development_dependency 'guard'
+  spec.add_development_dependency 'guard-rspec'
 
   # If you want to work on older builds of ruby
   spec.add_development_dependency 'listen', '3.0.7'
@@ -47,4 +47,7 @@ Gem::Specification.new do |spec|
   #
   # This will stop test execution and let you inspect the results
   spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'pry-nav'
+  spec.add_development_dependency 'awesome_print'
+
 end

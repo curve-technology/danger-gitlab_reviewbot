@@ -44,17 +44,36 @@ module Danger
     # * Danger::AssignStrategies::LeastBusyStrategy - assign the N users with the least amount of open MRs
     #   to review
     #
-    attr_writer :strategy
     def strategy
-      @strategy || Danger::AssignStrategies::RandomStrategy
+      @strategy #|| Danger::AssignStrategies::RandomStrategy.new(client: gitlab.api, project: project_id, mr: mr_iid)
+    end
+
+    def strategy=(klass)
+      @strategy = klass.new(client: gitlab.api, project: project_id, mr: mr_iid)
+    end
+
+    def project_id
+      ENV['CI_PROJECT_ID']
+    end
+
+    def mr_iid
+      ENV['CI_MERGE_REQUEST_IID']
+    end
+
+    #Once a strategy is in place, adopt the conf methods
+    def method_missing(method, *args)
+      super unless method.to_s.start_with? 'strategy_'
+      if strategy.respond_to? method.to_s.delete_prefix('strategy_')
+        strategy.send(method.to_s.delete_prefix('strategy_'), *args)
+      else
+        super
+      end
     end
 
     # Call this method from the Dangerfile to assign reviewers to your merge requests
     # @return   The usernames list of assigned reviewes [Array<String>]
     #
     def assign!
-      project_id = ENV['CI_PROJECT_ID']
-      mr_iid = ENV['CI_MERGE_REQUEST_IID']
       if mr_iid.nil?
         raise "Env variable CI_MERGE_REQUEST_IID doesn't point to a valid merge request iid"
       end
@@ -73,17 +92,20 @@ module Danger
  #    puts "Required: #{required_assignees_count}" if @verbose
 
       # if required_assignees_count == 0
-      #   puts "Nothing to do" if @verbose
+      #   puts "Nothing to do" if verbose
       #   return
       # end
 
-      strategy_class = strategy.new(client: gitlab.api, project: project_id, mr: mr_iid, group: gitlab_group)
+      @strategy.group_name = gitlab_group
 
-      assignees = strategy_class.assign! assignees_amount
+      assignees = @strategy.assign! assignees_amount
 
       puts "Assigning: #{assignees}" if verbose
       return assignees
     end
+
+    private
+
   end
 end
 

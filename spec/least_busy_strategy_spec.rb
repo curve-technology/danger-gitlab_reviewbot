@@ -16,9 +16,11 @@ module Danger
       @nic.review_count = 0
       @members = [@author, @tom, @sam, @luke]
       allow(@mock_client).to receive(:fetch_author_for_mr).and_return(@author)
-      allow(@mock_client).to receive(:fetch_users_for_group).with(2200).and_return(@members)
+      allow(@mock_client).to receive(:fetch_users_for_group).with("tech/ios").and_return(@members)
 
-      @strategy = AssignStrategies::LeastBusyStrategy.new(client: @mock_client, project: 10, mr: 110, group: 2200)
+      @strategy = AssignStrategies::LeastBusyStrategy.new(client: @mock_client, project: 10, mr: 110)
+      @strategy.group_name = "tech/ios"
+
     end
 
     it "Assign the one least busy" do
@@ -89,6 +91,27 @@ module Danger
 
       @strategy.assign!(1)
     end
+
+    it "honours excluded users" do
+      allow(@mock_client).to receive(:fetch_mr_reviewers).with(10, 110).and_return([])
+      @tom.review_count = 1
+      @sam.review_count = 4
+      @luke.review_count = 3
+      users_with_pending_mr_review = [@author, @sam, @tom, @luke]
+      expect(@mock_client).to receive(:users_with_pending_mr_review).and_return(users_with_pending_mr_review)
+
+      allow(@mock_client).to receive(:find_user_with_username).with('Tom').and_return(@tom)
+      @strategy.excluded_users = ['Tom']
+
+      expect(@mock_client).to receive(:assign_mr_to_users) do |project, mr, users|
+        expect(project).to be == 10
+        expect(mr).to be == 110
+        expect(users).to contain_exactly(@luke)
+      end
+
+      @strategy.assign!(1)
+    end
+
   end
 end
 

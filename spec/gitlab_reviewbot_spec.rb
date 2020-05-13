@@ -15,20 +15,21 @@ module Danger
 
         @dangerfile = testing_dangerfile
         @plugin = @dangerfile.gitlab_reviewbot
-        @plugin.strategy = Danger::AssignStrategies::RandomStrategy
         @strategy_mock = instance_double(Danger::AssignStrategies::Strategy)
         allow(Danger::AssignStrategies::RandomStrategy).to receive(:new).and_return(@strategy_mock)
+        allow(@strategy_mock).to receive(:group_name=).with('tech/ios')
+        @plugin.strategy = Danger::AssignStrategies::RandomStrategy
+        @plugin.gitlab_group = 'tech/ios'
+
       end
 
       it "Assign one reviewer" do
-        @plugin.gitlab_group = 'tech/ios'
 
         expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Sam'])
 
         @plugin.assign!
       end
       it "Assign one reviewer" do
-        @plugin.gitlab_group = 'tech/ios'
 
         expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Sam'])
 
@@ -36,12 +37,20 @@ module Danger
       end
 
       it "Assign multiple reviewers" do
-        @plugin.gitlab_group = 'tech/ios'
         @plugin.assignees_amount = 2
 
         expect(@strategy_mock).to receive(:assign!).with(2).and_return(['Sam, Nic'])
 
         @plugin.assign!
+      end
+
+      it "Assigns strategy options" do
+        expect(@strategy_mock).to receive(:excluded_users=)
+        expect(@strategy_mock).to receive(:excluded_users).and_return([])
+
+        @plugin.strategy_excluded_users = ['Tom']
+        @plugin.strategy_excluded_users << 'Sam'
+
       end
 
       ['CI_PROJECT_ID', 'CI_MERGE_REQUEST_IID'].each do |var|

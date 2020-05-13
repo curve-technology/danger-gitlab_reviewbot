@@ -7,11 +7,10 @@ module Danger
       attr_accessor :client
       attr_accessor :excluded_users
 
-      def initialize(client:, project:, mr:, group:)
+      def initialize(client:, project:, mr:)
         @client = client
         @project_id = project
         @mr_iid = mr
-        @group_name = group
         @excluded_users = []
       end
 
@@ -39,9 +38,10 @@ module Danger
       end
 
       def fetch_users_in_group
-        excluded_users = @excluded_users.map { |u| client.find_user_with_username(u) }
-        client.fetch_users_for_group(@group_name).filter { |u| ! excluded_users.include? u }
+        excluded = @excluded_users.map { |u| client.find_user_with_username(u) }
+        client.fetch_users_for_group(@group_name).filter { |u| ! excluded.include? u }
       end
+
     end
   end
 end
