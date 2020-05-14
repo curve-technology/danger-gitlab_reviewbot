@@ -24,13 +24,11 @@ module Danger
       end
 
       it "Assign one reviewer" do
-
         expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Sam'])
 
         @plugin.assign!
       end
       it "Assign one reviewer" do
-
         expect(@strategy_mock).to receive(:assign!).with(1).and_return(['Sam'])
 
         @plugin.assign!
@@ -44,7 +42,7 @@ module Danger
         @plugin.assign!
       end
 
-      it "Assigns strategy options" do
+      it "Correctly sets strategy options" do
         expect(@strategy_mock).to receive(:excluded_users=)
         expect(@strategy_mock).to receive(:excluded_users).and_return([])
 

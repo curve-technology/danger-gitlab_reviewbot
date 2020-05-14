@@ -16,7 +16,7 @@ module Danger
 
       def assign!(amount)
         currently_assigned = fetch_assigned_reviewers()
-        return [] if (amount - currently_assigned.length) == 0
+        return [] if (amount - currently_assigned.length) <= 0
 
         to_be_assigned = assignees(amount - currently_assigned.length)
         all_assignees = currently_assigned + to_be_assigned
